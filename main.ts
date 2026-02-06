@@ -1,15 +1,12 @@
 import express from 'express';
 import Database from 'better-sqlite3';
 const app = express();
+app.use(express.json());
 const db = new Database ('wadsongs.db');
 app.get('/', (req,res) => {
 	res.send('Hello World from Express!');
 });
 
-const PORT = 3000;
-app.listen (PORT, () =>{
-	console.log(`Server listening on port ${PORT}.`);
-});
 
 app.get('/artist/:artist', (req,res) =>{
 	try{
@@ -48,12 +45,24 @@ app.get('/id/:id', (req,res) => {
 		res.status(500).json ({error : error});
 	}
 });
-app.post('/song', (req,res) =>{
+app.post('/song/create', (req,res) =>{
 	try{
-		const stmt = db.prepare("INSERT INTO wadsongs(id,title,artist,year,downloads,price,quantity) VALUES(?,?,?,?,?,?,?)");
-		const info = stmt.run(req.body.id,req.body.title,req.body.artist,req.body.year,req.body.downloads,req.body.price,req.body.quantity);
-		res.json({id:info.lastInsertRowid});
+		const stmt = db.prepare("INSERT INTO wadsongs(title, artist, year, downloads, price, quantity) VALUES(?, ?, ?, ?, ?, ?)");
+		const info = stmt.run(req.body.title, req.body.artist, req.body.year, req.body.downloads, req.body.price, req.body.quantity);
+		res.json({id:info.lastInsertRowid}); 
+
 	} catch (error) {
-		res.status(500).json({ error : error});
-	}
+  if (error instanceof Error) {
+    console.error(error.message);
+    res.status(500).json({ error: error.message });
+  } else {
+    console.error(error);
+    res.status(500).json({ error: 'Unknown error occurred' });
+  }
+}
+});
+
+const PORT = 3000;
+app.listen (PORT, () =>{
+	console.log(`Server listening on port ${PORT}.`);
 });
